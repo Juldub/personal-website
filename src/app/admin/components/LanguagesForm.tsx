@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Language, CVState } from '@/types/cv';
 
 interface LanguagesFormProps {
@@ -7,11 +7,23 @@ interface LanguagesFormProps {
 }
 
 export default function LanguagesForm({ cv, updateCV }: LanguagesFormProps) {
-  const [languages, setLanguages] = useState<Language[]>(cv.languages);
+  const [languages, setLanguages] = useState<Language[]>([]);
+
+  useEffect(() => {
+    console.log('CV languages received:', cv.languages);
+    if (cv.languages && Array.isArray(cv.languages)) {
+      const langs = cv.languages.map(lang => ({
+        name: lang.name || '',
+        level: lang.level || ''
+      }));
+      console.log('Languages after mapping:', langs);
+      setLanguages(langs);
+    }
+  }, [cv.languages]);
 
   const handleAddLanguage = (e: React.MouseEvent) => {
     e.preventDefault();
-    setLanguages([...languages, { language: '', level: '' }]);
+    setLanguages([...languages, { name: '', level: '' }]);
   };
 
   const handleRemoveLanguage = (index: number) => {
@@ -21,47 +33,47 @@ export default function LanguagesForm({ cv, updateCV }: LanguagesFormProps) {
     updateCV({ ...cv, languages: newLanguages });
   };
 
-const handleLanguageChange = (index: number, field: 'language' | 'level', value: string) => {
-  const newLanguages = [...languages];
-  newLanguages[index][field] = value;
-  setLanguages(newLanguages);
-  updateCV({ ...cv, languages: newLanguages });
-};
+  const handleLanguageChange = (index: number, field: 'name' | 'level', value: string) => {
+    const newLanguages = [...languages];
+    newLanguages[index][field] = value;
+    setLanguages(newLanguages);
+    updateCV({ ...cv, languages: newLanguages });
+  };
 
   return (
-    <div className="mt-8">
-      <h2 className="text-2xl font-bold mb-4">Langues</h2>
+    <div className="space-y-8">
+      <h2 className="text-2xl font-semibold text-gray-800 mb-6 border-b-2 border-indigo-600 pb-2">Langues</h2>
       {languages.map((lang: Language, index: number) => (
-        <div key={index} className="flex gap-4 mb-4">
+        <div key={index} className="flex gap-4 mb-6">
           <input
             type="text"
-            value={lang.language}
-            onChange={(e) => handleLanguageChange(index, 'language', e.target.value)}
+            value={lang.name || ''}
+            onChange={(e) => handleLanguageChange(index, 'name', e.target.value)}
             placeholder="Langue"
-            className="flex-1 p-2 border rounded"
+            className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           />
           <input
             type="text"
-            value={lang.level}
+            value={lang.level || ''}
             onChange={(e) => handleLanguageChange(index, 'level', e.target.value)}
             placeholder="Niveau"
-            className="flex-1 p-2 border rounded"
+            className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           />
           <button
             onClick={() => handleRemoveLanguage(index)}
-            className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+            className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors duration-200"
           >
             Supprimer
           </button>
         </div>
       ))}
-      <div className="flex gap-4">
+      <div className="flex justify-end">
         <button
           onClick={(e) => {
             e.preventDefault();
             handleAddLanguage(e);
           }}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          className="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors duration-200"
         >
           Ajouter une langue
         </button>
