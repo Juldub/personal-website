@@ -79,7 +79,7 @@ const handleEducationChange = (index: number, field: string, value: string) => {
 
   return (
     <div>
-      <h2 className="text-xl font-semibold mb-4">Formation</h2>
+      <h2 className="text-2xl font-semibold text-gray-800 mb-6 border-b-2 border-indigo-600 pb-2">Éducation</h2>
       {(cv.education || []).map((edu, index) => (
         <div key={index} className="border p-4 rounded mb-4">
           <div className="grid grid-cols-2 gap-4 mb-4">
