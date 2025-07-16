@@ -8,23 +8,31 @@ export async function GET() {
     await connectDB();
     const cv = await CVModel.findOne();
     if (!cv) {
-      return NextResponse.json(null);
+      return NextResponse.json({ message: 'CV not found' }, { status: 404 });
     }
     
-    // Convertir le format des langues
-    const cvData = {
-      ...cv.toObject(),
-      languages: cv.languages.map((lang: { name: string; level: string }) => ({
-        language: lang.name,
-        level: lang.level
-      }))
-    };
-
-    return NextResponse.json(cvData);
-  } catch (error: unknown) {
+    // Convertir le document MongoDB en objet JavaScript simple
+    const result = JSON.parse(JSON.stringify(cv));
+    
+    // Si l'ancien format (name) existe, le convertir en firstName et lastName
+    if (result.personalInfo?.name) {
+      const nameParts = result.personalInfo.name.split(' ');
+      result.personalInfo.firstName = nameParts[0] || '';
+      result.personalInfo.lastName = nameParts.slice(1).join(' ') || '';
+      delete result.personalInfo.name;
+    }
+    
+    // S'assurer que les langues ont la bonne structure
+    result.languages = (result.languages || []).map((lang: any) => ({
+      name: lang.name || lang.language || '',
+      level: lang.level || ''
+    }));
+    
+    return NextResponse.json(result);
+  } catch (error) {
     console.error('Error fetching CV:', error);
     return NextResponse.json(
-      { message: 'Internal server error', error: error instanceof Error ? error.message : 'Unknown error' },
+      { message: 'Internal server error' },
       { status: 500 }
     );
   }
@@ -35,41 +43,55 @@ export async function POST(request: Request) {
   try {
     const data = await request.json();
     
-    // Convertir le format des langues
+    // Gérer la conversion de l'ancien format (name) vers le nouveau format (firstName, lastName)
+    let firstName = '';
+    let lastName = '';
+    
+    if (data.personalInfo?.name) {
+      const nameParts = data.personalInfo.name.split(' ');
+      firstName = nameParts[0] || '';
+      lastName = nameParts.slice(1).join(' ') || '';
+    }
+    
+    // Préparer les données personnelles avec des valeurs par défaut
+    const personalInfo = {
+      firstName: data.personalInfo?.firstName || firstName || '',
+      lastName: data.personalInfo?.lastName || lastName || '',
+      email: data.personalInfo?.email || '',
+      phone: data.personalInfo?.phone || '',
+      location: data.personalInfo?.location || ''
+    };
+    
+    // Préparer les données pour la sauvegarde
     const cvData = {
       ...data,
-      languages: data.languages.map((lang: { language: string; level: string }) => ({
-        name: lang.language,
-        level: lang.level
-      }))
+      personalInfo,
+      languages: (data.languages || []).map((lang: any) => ({
+        name: lang?.name || '',
+        level: lang?.level || ''
+      })),
+      education: Array.isArray(data.education) ? data.education : [],
+      experience: Array.isArray(data.experience) ? data.experience : [],
+      skills: Array.isArray(data.skills) ? data.skills : []
     };
 
     await connectDB();
     
-    // Vérifier si un CV existe déjà
-    const existingCV = await CVModel.findOne();
+    // Mettre à jour ou créer le CV
+    const result = await CVModel.findOneAndUpdate(
+      {},
+      { $set: cvData },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    );
     
-    if (existingCV) {
-      // Mettre à jour le CV existant
-      const updatedCV = await CVModel.findOneAndUpdate(
-        { _id: existingCV._id },
-        { $set: cvData },
-        { new: true, runValidators: true }
-      );
-      if (!updatedCV) {
-        throw new Error('Failed to update CV');
-      }
-      return NextResponse.json(updatedCV);
-    } else {
-      // Créer un nouveau CV
-      const newCV = new CVModel(cvData);
-      await newCV.save();
-      return NextResponse.json(newCV);
-    }
-  } catch (error: unknown) {
+    return NextResponse.json(result);
+  } catch (error) {
     console.error('Error saving CV:', error);
     return NextResponse.json(
-      { message: 'Internal server error', error: error instanceof Error ? error.message : 'Unknown error' },
+      { 
+        message: 'Internal server error', 
+        error: error instanceof Error ? error.message : 'Unknown error' 
+      },
       { status: 500 }
     );
   }

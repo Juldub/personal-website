@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Julien Dubois - Développeur Full Stack",
-  description: "Portfolio et CV de Julien Dubois, Développeur Full Stack passionné par les technologies modernes.",
+  title: "Julien Dubois - Product guy",
+  description: "Portfolio et CV de Julien Dubois, passionné par le développement de produits numériques innovants.",
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },

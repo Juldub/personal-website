@@ -60,8 +60,12 @@ export default function CVDisplay() {
         <h2 className="text-2xl font-semibold mb-4">Informations personnelles</h2>
         <div className="grid md:grid-cols-2 gap-4">
           <div>
+            <p className="font-medium">Prénom</p>
+            <p>{cv.personalInfo?.firstName || 'Non spécifié'}</p>
+          </div>
+          <div>
             <p className="font-medium">Nom</p>
-            <p>{cv.personalInfo?.name || 'Non spécifié'}</p>
+            <p>{cv.personalInfo?.lastName || 'Non spécifié'}</p>
           </div>
           <div>
             <p className="font-medium">Email</p>

@@ -13,7 +13,8 @@ export default function AdminPage() {
   const router = useRouter();
   const [cv, setCv] = useState<CVState>({
     personalInfo: {
-      name: '',
+      firstName: '',
+      lastName: '',
       email: '',
       phone: '',
       location: ''
@@ -30,11 +31,12 @@ export default function AdminPage() {
         const response = await fetch('/api/cv');
         if (response.ok) {
           const data = await response.json();
-          console.log('API Response:', data);
+          
           if (!data) {
             setCv({
               personalInfo: {
-                name: '',
+                firstName: '',
+                lastName: '',
                 email: '',
                 phone: '',
                 location: ''
@@ -47,15 +49,36 @@ export default function AdminPage() {
             return;
           }
           
-          console.log('Raw languages from API:', data.languages);
+          const personalInfo = data.personalInfo || {};
+          let firstName = '';
+          let lastName = '';
+          
+          if (personalInfo.name) {
+            const nameParts = personalInfo.name.split(' ');
+            firstName = nameParts[0] || '';
+            lastName = nameParts.slice(1).join(' ') || '';
+          }
+          
+          // S'assurer que les langues ont la bonne structure
+          const languages = Array.isArray(data.languages) 
+            ? data.languages.map((lang: any) => ({
+                name: lang.name || lang.language || '',
+                level: lang.level || ''
+              }))
+            : [];
+            
           const convertedCV: CVState = {
             ...data,
-            languages: data.languages.map((lang: { language?: string; name?: string; level: string }) => ({
-              name: lang.language || lang.name || '',
-              level: lang.level || ''
-            }))
+            personalInfo: {
+              firstName: personalInfo.firstName || firstName || '',
+              lastName: personalInfo.lastName || lastName || '',
+              email: personalInfo.email || '',
+              phone: personalInfo.phone || '',
+              location: personalInfo.location || ''
+            },
+            languages
           };
-          console.log('Converted languages:', convertedCV.languages);
+          
           setCv(convertedCV);
         }
       } catch (error) {
@@ -69,12 +92,19 @@ export default function AdminPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      // Convertir le format des langues
+      // Préparer les données à sauvegarder
       const cvToSave = {
         ...cv,
-        languages: cv.languages.map(lang => ({
-          language: lang.name,
-          level: lang.level
+        personalInfo: {
+          firstName: cv.personalInfo.firstName || '',
+          lastName: cv.personalInfo.lastName || '',
+          email: cv.personalInfo.email || '',
+          phone: cv.personalInfo.phone || '',
+          location: cv.personalInfo.location || ''
+        },
+        languages: (cv.languages || []).map(lang => ({
+          name: lang?.name || '',
+          level: lang?.level || ''
         }))
       };
 
@@ -87,25 +117,38 @@ export default function AdminPage() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to save CV');
+        throw new Error('Erreur lors de la sauvegarde');
       }
 
-      window.location.reload();
+      const result = await response.json();
+      setCv(result);
+      // setNotification('CV mis à jour avec succès');
+      
+      // Cacher la notification après 3 secondes
+      // setTimeout(() => setNotification(''), 3000);
     } catch (error) {
-      console.error('Error saving CV:', error);
-      alert('Erreur lors de la sauvegarde : ' + (error instanceof Error ? error.message : 'Erreur inconnue'));
+      console.error('Erreur lors de la sauvegarde du CV:', error);
+      // setNotification('Erreur lors de la sauvegarde du CV');
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-50 p-6">
-      <div className="max-w-6xl mx-auto">
-        <header className="mb-10 bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Administration du CV</h1>
-          <p className="text-blue-700">Modifiez et mettez à jour les informations de votre CV</p>
-        </header>
-
+    <div className="min-h-screen bg-gray-50 py-8 px-4">
+      <div className="max-w-5xl mx-auto">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Administration du CV</h1>
+          <a
+            href="/cv"
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+            </svg>
+            Voir le CV
+          </a>
+        </div>
+        <p className="text-blue-700">Modifiez et mettez à jour les informations de votre CV</p>
         <form onSubmit={handleSubmit} className="space-y-8">
           <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200">
             <div className="mb-6">

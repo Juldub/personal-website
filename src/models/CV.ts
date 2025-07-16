@@ -2,7 +2,8 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface CV extends Document {
   personalInfo: {
-    name: string;
+    firstName: string;
+    lastName: string;
     email: string;
     phone: string;
     location: string;
@@ -28,10 +29,11 @@ export interface CV extends Document {
 
 const cvSchema = new Schema({
   personalInfo: {
-    name: String,
-    email: String,
-    phone: String,
-    location: String
+    firstName: { type: String, required: true },
+    lastName: { type: String, required: true },
+    email: { type: String, required: true },
+    phone: { type: String, default: '' },
+    location: { type: String, default: '' }
   },
   education: [{
     institution: String,
@@ -52,7 +54,4 @@ const cvSchema = new Schema({
   }]
 });
 
-// Utiliser un pattern de singleton pour éviter de redéfinir le modèle
-const CVModel = mongoose.models.CV || mongoose.model('CV', cvSchema);
-
-export default CVModel;
+export default mongoose.models.CV || mongoose.model<CV>('CV', cvSchema);

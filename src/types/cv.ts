@@ -5,7 +5,8 @@ export interface Language {
 
 export interface CVState {
   personalInfo: {
-    name: string;
+    firstName: string;
+    lastName: string;
     email: string;
     phone: string;
     location: string;

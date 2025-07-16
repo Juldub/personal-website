@@ -19,17 +19,32 @@ export function PersonalInfoForm({ cv, setCv }: PersonalInfoFormProps) {
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-1">
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-            Nom complet <span className="text-red-500">*</span>
+          <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">
+            Prénom <span className="text-red-500">*</span>
           </label>
           <input
-            id="name"
+            id="firstName"
             type="text"
             required
-            value={cv.personalInfo.name}
-            onChange={(e) => setCv(prev => ({ ...prev, personalInfo: { ...prev.personalInfo, name: e.target.value } }))}
+            value={cv.personalInfo.firstName || ''}
+            onChange={(e) => setCv(prev => ({ ...prev, personalInfo: { ...prev.personalInfo, firstName: e.target.value } }))}
             className="block w-full px-4 py-2.5 text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
-            placeholder="Jean Dupont"
+            placeholder="Jean"
+          />
+        </div>
+
+        <div className="space-y-1">
+          <label htmlFor="lastName" className="block text-sm font-medium text-gray-700">
+            Nom <span className="text-red-500">*</span>
+          </label>
+          <input
+            id="lastName"
+            type="text"
+            required
+            value={cv.personalInfo.lastName || ''}
+            onChange={(e) => setCv(prev => ({ ...prev, personalInfo: { ...prev.personalInfo, lastName: e.target.value } }))}
+            className="block w-full px-4 py-2.5 text-gray-900 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+            placeholder="Dupont"
           />
         </div>
         
